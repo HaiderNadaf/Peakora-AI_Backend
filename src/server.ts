@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import authRouter from "./routes/auth.routes";
 import chatRouter from "./routes/chat.routes";
 import voiceRouter from "./routes/voice.routes";
 
@@ -19,6 +20,7 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+app.use("/api/auth", authRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/voice", voiceRouter);
 

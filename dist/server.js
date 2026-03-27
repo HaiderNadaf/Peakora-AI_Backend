@@ -8,6 +8,7 @@ const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
+const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const voice_routes_1 = __importDefault(require("./routes/voice.routes"));
 const app = (0, express_1.default)();
@@ -20,6 +21,7 @@ app.use(express_1.default.json({ limit: "1mb" }));
 app.get("/health", (_req, res) => {
     res.json({ ok: true });
 });
+app.use("/api/auth", auth_routes_1.default);
 app.use("/api/chat", chat_routes_1.default);
 app.use("/api/voice", voice_routes_1.default);
 app.listen(port, () => {
