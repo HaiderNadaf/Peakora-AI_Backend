@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import { clerkMiddleware } from "@clerk/express";
 import authRouter from "./routes/auth.routes";
 import chatRouter from "./routes/chat.routes";
 import voiceRouter from "./routes/voice.routes";
@@ -15,6 +16,7 @@ app.use(helmet());
 app.use(cors({ origin }));
 app.use(morgan("dev"));
 app.use(express.json({ limit: "1mb" }));
+app.use(clerkMiddleware());
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
