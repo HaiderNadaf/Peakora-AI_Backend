@@ -1,16 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = authMiddleware;
-const auth_service_1 = require("../services/auth.service");
-function authMiddleware(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
+const express_1 = require("@clerk/express");
+const clerk_user_service_1 = require("../services/clerk-user.service");
+async function authMiddleware(req, res, next) {
+    const { userId } = (0, express_1.getAuth)(req);
+    if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
     }
-    const token = authHeader.slice("Bearer ".length);
     try {
-        const payload = (0, auth_service_1.verifyToken)(token);
-        req.userId = payload.userId;
+        const user = await (0, clerk_user_service_1.syncClerkUser)(userId);
+        req.userId = user.id;
         return next();
     }
     catch {

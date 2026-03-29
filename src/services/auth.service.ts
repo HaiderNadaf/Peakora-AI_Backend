@@ -35,7 +35,6 @@ export async function login(email: string, password: string) {
   if (!isValid) {
     throw new Error("Invalid email or password");
   }
-
   return issueToken(user.id);
 }
 
@@ -54,4 +53,23 @@ function issueToken(userId: string) {
 
   const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
   return { token, userId };
+}
+
+export async function getOrCreateGuestUserId() {
+  const existing = await prisma.user.findUnique({
+    where: { email: "guest@local" },
+  });
+
+  if (existing) {
+    return existing.id;
+  }
+
+  const user = await prisma.user.create({
+    data: {
+      email: "guest@local",
+      passwordHash: "",
+    },
+  });
+
+  return user.id;
 }

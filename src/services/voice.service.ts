@@ -44,12 +44,27 @@ export async function speechToText(
   form.append("file", blob, filename || "recording.m4a");
   form.append("model_id", "scribe_v1");
 
-  const response = await axios.post("https://api.elevenlabs.io/v1/speech-to-text", form, {
-    headers: {
-      "xi-api-key": elevenLabsApiKey,
-    },
-  });
+  try {
+    const response = await axios.post("https://api.elevenlabs.io/v1/speech-to-text", form, {
+      headers: {
+        "xi-api-key": elevenLabsApiKey,
+      },
+    });
 
-  const text = (response.data?.text as string | undefined) ?? "";
-  return text.trim();
+    const text = (response.data?.text as string | undefined) ?? "";
+    return text.trim();
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      if (status === 401) {
+        throw new Error("ElevenLabs STT unauthorized: check ELEVENLABS_API_KEY on backend");
+      }
+      if (status === 422) {
+        throw new Error("ElevenLabs STT rejected audio format");
+      }
+      throw new Error(`ElevenLabs STT failed with status ${status ?? "unknown"}`);
+    }
+
+    throw error;
+  }
 }

@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const collab_controller_1 = require("../controllers/collab.controller");
+const collabRouter = (0, express_1.Router)();
+collabRouter.use(auth_middleware_1.authMiddleware);
+collabRouter.get("/users", collab_controller_1.listUsersController);
+collabRouter.get("/sessions", collab_controller_1.listSessionsController);
+collabRouter.post("/sessions", collab_controller_1.createSessionController);
+collabRouter.get("/sessions/:sessionId", collab_controller_1.getSessionController);
+collabRouter.post("/sessions/:sessionId/research", collab_controller_1.researchController);
+collabRouter.get("/sessions/:sessionId/direct/:userId", collab_controller_1.getDirectConversationController);
+collabRouter.post("/sessions/:sessionId/tag", collab_controller_1.tagResearchController);
+collabRouter.post("/direct/:conversationId/messages", collab_controller_1.sendDirectMessageController);
+exports.default = collabRouter;

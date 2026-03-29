@@ -1,6 +1,9 @@
 import { Router } from "express";
-import { chatController, chatHistoryController } from "../controllers/chat.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import {
+  chatController,
+  chatHistoryController,
+} from "../controllers/chat.controller";
 
 const chatRouter = Router();
 

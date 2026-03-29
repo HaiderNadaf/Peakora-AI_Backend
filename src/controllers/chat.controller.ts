@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import { prisma } from "../config/prisma";
 import { generateChatReply } from "../services/chat.service";
+import { getOrCreateGuestUserId } from "../services/auth.service";
 
 export async function chatController(req: Request, res: Response) {
   try {
-    if (!req.userId) {
+    const userId = req.userId;
+    if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
@@ -20,12 +22,12 @@ export async function chatController(req: Request, res: Response) {
     await prisma.message.createMany({
       data: [
         {
-          userId: req.userId,
+          userId,
           role: "user",
           content: userMessage,
         },
         {
-          userId: req.userId,
+          userId,
           role: "assistant",
           content: reply,
         },
@@ -41,12 +43,13 @@ export async function chatController(req: Request, res: Response) {
 
 export async function chatHistoryController(req: Request, res: Response) {
   try {
-    if (!req.userId) {
+    const userId = req.userId;
+    if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const messages = await prisma.message.findMany({
-      where: { userId: req.userId },
+      where: { userId },
       orderBy: { createdAt: "asc" },
       select: {
         id: true,

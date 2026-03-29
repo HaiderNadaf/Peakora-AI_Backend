@@ -1,19 +1,32 @@
 import { NextFunction, Request, Response } from "express";
-import { verifyToken } from "../services/auth.service";
+import { verifyToken } from "@clerk/backend";
+import { clerkSecretKey } from "../config/clerk";
+import { syncClerkUser } from "../services/clerk-user.service";
 
-export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Missing bearer token" });
   }
 
-  const token = authHeader.slice("Bearer ".length);
-
   try {
-    const payload = verifyToken(token);
-    req.userId = payload.userId;
+    if (!clerkSecretKey) {
+      return res.status(500).json({ error: "Missing Clerk secret key" });
+    }
+
+    const token = authHeader.slice("Bearer ".length);
+    const payload = await verifyToken(token, { secretKey: clerkSecretKey });
+    const clerkUserId = payload.sub;
+
+    if (!clerkUserId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await syncClerkUser(clerkUserId);
+    req.userId = user.id;
     return next();
-  } catch {
-    return res.status(401).json({ error: "Invalid token" });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invalid token";
+    return res.status(401).json({ error: message });
   }
 }
