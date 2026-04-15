@@ -1,5 +1,6 @@
 export const clerkSecretKey = process.env.CLERK_SECRET_KEY ?? "";
 export const clerkPublishableKey =
+  process.env.CLERK_PUBLISHABLE_KEY ??
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ??
   process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ??
   "";

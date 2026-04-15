@@ -7,6 +7,8 @@ import { clerkMiddleware } from "@clerk/express";
 import authRouter from "./routes/auth.routes";
 import chatRouter from "./routes/chat.routes";
 import voiceRouter from "./routes/voice.routes";
+import usersRouter from "./routes/users.routes";
+import directMessagesRouter from "./routes/direct-messages.routes";
 
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
@@ -25,6 +27,8 @@ app.get("/health", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/voice", voiceRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/direct-messages", directMessagesRouter);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

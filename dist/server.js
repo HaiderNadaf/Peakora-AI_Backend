@@ -12,6 +12,8 @@ const express_2 = require("@clerk/express");
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const voice_routes_1 = __importDefault(require("./routes/voice.routes"));
+const users_routes_1 = __importDefault(require("./routes/users.routes"));
+const direct_messages_routes_1 = __importDefault(require("./routes/direct-messages.routes"));
 const clerk_1 = require("./config/clerk");
 const app = (0, express_1.default)();
 const port = Number(process.env.PORT ?? 4000);
@@ -33,6 +35,8 @@ app.get("/health", (_req, res) => {
 app.use("/api/auth", auth_routes_1.default);
 app.use("/api/chat", chat_routes_1.default);
 app.use("/api/voice", voice_routes_1.default);
+app.use("/api/users", users_routes_1.default);
+app.use("/api/direct-messages", direct_messages_routes_1.default);
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });

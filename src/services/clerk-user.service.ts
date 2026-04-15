@@ -25,10 +25,14 @@ export async function syncClerkUser(clerkUserId: string) {
     return existingByEmail;
   }
 
+  const emailBase = email.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
+  const username = `${emailBase}_${Math.floor(1000 + Math.random() * 9000)}`;
+
   return prisma.user.create({
     data: {
       id: clerkUserId,
       email,
+      username,
       passwordHash: "",
     },
   });
