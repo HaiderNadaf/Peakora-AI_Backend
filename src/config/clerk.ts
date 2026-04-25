@@ -11,6 +11,6 @@ if (!clerkSecretKey) {
 
 if (!clerkPublishableKey) {
   console.warn(
-    "Missing Clerk publishable key in .env. Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY or EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY.",
+    "Missing Clerk publishable key in .env. Set CLERK_PUBLISHABLE_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, or EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY.",
   );
 }

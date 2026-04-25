@@ -1,8 +1,5 @@
 import { Request, Response } from "express";
 import { prisma } from "../config/prisma";
-import { Expo } from "expo-server-sdk";
-
-const expo = new Expo();
 
 export async function sendMessageController(req: Request, res: Response) {
   try {
@@ -12,41 +9,50 @@ export async function sendMessageController(req: Request, res: Response) {
     }
 
     const { receiverId, content } = req.body;
-    if (!receiverId || !content) {
+    if (typeof receiverId !== "string" || typeof content !== "string") {
       return res.status(400).json({ error: "Missing receiverId or content" });
+    }
+
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
+      return res.status(400).json({ error: "Message content cannot be empty" });
+    }
+
+    const [senderExists, receiverExists] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: senderId },
+        select: { id: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: receiverId },
+        select: { id: true },
+      }),
+    ]);
+
+    if (!senderExists) {
+      return res.status(404).json({
+        error: "Sender user not found. Please sign out and sign in again.",
+      });
+    }
+    if (!receiverExists) {
+      return res.status(404).json({ error: "Receiver user not found" });
     }
 
     const message = await prisma.directMessage.create({
       data: {
         senderId,
         receiverId,
-        content,
+        content: trimmedContent,
       },
     });
 
-    const receiver = await prisma.user.findUnique({
-      where: { id: receiverId },
-      select: { expoPushToken: true }
-    });
-
-    if (receiver?.expoPushToken && Expo.isExpoPushToken(receiver.expoPushToken)) {
-      try {
-        const sender = await prisma.user.findUnique({ where: { id: senderId }, select: { username: true, email: true } });
-        const senderName = sender?.username || sender?.email.split('@')[0] || "Someone";
-        await expo.sendPushNotificationsAsync([{
-          to: receiver.expoPushToken,
-          sound: "default",
-          title: `New message from ${senderName}`,
-          body: content,
-          data: { senderId }
-        }]);
-      } catch (err) {
-        console.error("Failed to send push notification:", err);
-      }
-    }
-
     return res.json(message);
   } catch (error) {
+    console.error("sendMessageController error:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      code: typeof error === "object" && error && "code" in error ? (error as { code?: string }).code : undefined,
+      meta: typeof error === "object" && error && "meta" in error ? (error as { meta?: unknown }).meta : undefined,
+    });
     const message = error instanceof Error ? error.message : "Unknown error";
     return res.status(500).json({ error: message });
   }

@@ -2,8 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMessagesWithUserController = exports.getConversationsController = exports.sendMessageController = void 0;
 const prisma_1 = require("../config/prisma");
-const expo_server_sdk_1 = require("expo-server-sdk");
-const expo = new expo_server_sdk_1.Expo();
 async function sendMessageController(req, res) {
     try {
         const senderId = req.userId;
@@ -11,35 +9,42 @@ async function sendMessageController(req, res) {
             return res.status(401).json({ error: "Unauthorized" });
         }
         const { receiverId, content } = req.body;
-        if (!receiverId || !content) {
+        if (typeof receiverId !== "string" || typeof content !== "string") {
             return res.status(400).json({ error: "Missing receiverId or content" });
         }
-        const message = await prisma_1.prisma.directMessage.create({
-            data: { senderId, receiverId, content },
-        });
-        const receiver = await prisma_1.prisma.user.findUnique({
-            where: { id: receiverId },
-            select: { expoPushToken: true },
-        });
-        if ((receiver === null || receiver === void 0 ? void 0 : receiver.expoPushToken) && expo_server_sdk_1.Expo.isExpoPushToken(receiver.expoPushToken)) {
-            try {
-                const sender = await prisma_1.prisma.user.findUnique({ where: { id: senderId }, select: { username: true, email: true } });
-                const senderName = (sender === null || sender === void 0 ? void 0 : sender.username) || ((sender === null || sender === void 0 ? void 0 : sender.email.split("@")[0]) || "Someone");
-                await expo.sendPushNotificationsAsync([{
-                        to: receiver.expoPushToken,
-                        sound: "default",
-                        title: `New message from ${senderName}`,
-                        body: content,
-                        data: { senderId },
-                    }]);
-            }
-            catch (err) {
-                console.error("Failed to send push notification:", err);
-            }
+        const trimmedContent = content.trim();
+        if (!trimmedContent) {
+            return res.status(400).json({ error: "Message content cannot be empty" });
         }
+        const [senderExists, receiverExists] = await Promise.all([
+            prisma_1.prisma.user.findUnique({
+                where: { id: senderId },
+                select: { id: true },
+            }),
+            prisma_1.prisma.user.findUnique({
+                where: { id: receiverId },
+                select: { id: true },
+            }),
+        ]);
+        if (!senderExists) {
+            return res.status(404).json({
+                error: "Sender user not found. Please sign out and sign in again.",
+            });
+        }
+        if (!receiverExists) {
+            return res.status(404).json({ error: "Receiver user not found" });
+        }
+        const message = await prisma_1.prisma.directMessage.create({
+            data: { senderId, receiverId, content: trimmedContent },
+        });
         return res.json(message);
     }
     catch (error) {
+        console.error("sendMessageController error:", {
+            message: error instanceof Error ? error.message : "Unknown error",
+            code: typeof error === "object" && error && "code" in error ? error.code : undefined,
+            meta: typeof error === "object" && error && "meta" in error ? error.meta : undefined,
+        });
         const message = error instanceof Error ? error.message : "Unknown error";
         return res.status(500).json({ error: message });
     }
